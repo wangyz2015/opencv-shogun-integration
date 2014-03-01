@@ -7,6 +7,7 @@ FaceRecognizer_EigenFaces::FaceRecognizer_EigenFaces(int num_components)
 
 }
 
+// Calculate the euclidean distance between two vector of the same size
 double norm(SGMatrix<float64_t> m1, SGMatrix<float64_t> m2){
 
     double result=0;
@@ -20,9 +21,11 @@ double norm(SGMatrix<float64_t> m1, SGMatrix<float64_t> m2){
 
 int FaceRecognizer_EigenFaces::predict(Mat image)
 {
+    // image as a rows
     SGVector<float64_t> sgMat(image.cols*image.rows);
     cv::Mat src;
     image.convertTo(src,CV_64FC1);
+    //resize image -> shogun PCA takes a lot time features>>vectors
     cv::resize(src, src,  cv::Size(25, 25));
 
     MatConstIterator_<double> it = src.begin<double>();
@@ -33,9 +36,9 @@ int FaceRecognizer_EigenFaces::predict(Mat image)
     double minDist = DBL_MAX;
     int minClass = -1;
 
+    // Search the closest face
     for(size_t sampleIdx = 0; sampleIdx < _projections.size(); sampleIdx++) {
         double dist = norm(_projections[sampleIdx], q);
-
         if((dist < minDist) && (dist < _threshold)) {
             minDist = dist;
             minClass = _labels[sampleIdx];
