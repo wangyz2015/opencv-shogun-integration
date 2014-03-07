@@ -84,11 +84,22 @@ void FaceRecognizer_EigenFaces::train(vector<Mat> images, std::vector<int>& labe
     SGMatrix<float64_t> eigenvectors = pca->get_transformation_matrix();
     eigenvectors_mainComponents =  SGMatrix<float64_t>(_num_components, values.size());
 
-    for(int i =0 ; i < eigenvectors.num_cols; i++){
+//    for(int i =0 ; i < eigenvectors.num_cols; i++){
+//        for(int j =0 ; j < _num_components; j++){
+//            std::cout <<i << " " <<  j  <<std::endl;
+//            eigenvectors_mainComponents(j, i) = eigenvectors(eigenvectors.num_rows - j -1, i);
+//        }
+//    }
+
+//    std::cout << eigenvectors.num_cols << " "<< eigenvectors.num_rows  << std::endl;
+//    std::cout << eigenvectors_mainComponents.num_cols << " "<< eigenvectors_mainComponents.num_rows  << std::endl;
+    for(int i =0 ; i < eigenvectors.num_rows; i++){
         for(int j =0 ; j < _num_components; j++){
-            eigenvectors_mainComponents(j, i) = eigenvectors(eigenvectors.num_rows - j -1, i);
+            eigenvectors_mainComponents( j, i)= eigenvectors(i, eigenvectors.num_cols - j -1);
         }
     }
+
+
 
     int t= 0;
     for(int i = values.size()-1; i > values.size()-_num_components-1;i--){
