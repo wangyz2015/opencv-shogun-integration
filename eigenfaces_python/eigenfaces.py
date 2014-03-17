@@ -4,10 +4,14 @@
 
 import cv2
 import numpy as np
+
 from modshogun import RealFeatures
 from modshogun import PCA
+from modshogun import EuclideanDistance
 from numpy import linalg as LA
+
 import math
+import os
 
 IMAGE_WIDHT = 25
 IMAGE_HEIGHT = 25
@@ -57,10 +61,10 @@ class EigenFaces():
         minClass = -1;  #class      
         #search which face is the best match
         for sampleIdx in range(len(self._projections)):
-            result=0;
-            for i in range(p.shape[0]):
-                result = result + (p[i]-self._projections[sampleIdx][i])**2;
-            dist = math.sqrt(result)
+            test = RealFeatures(np.asmatrix(p,np.float64).T)
+            projection = RealFeatures(np.asmatrix(self._projections[sampleIdx],np.float64).T)
+            dist = EuclideanDistance( test, projection).distance(0,0)
+
             if(dist < minDist ):
                 minDist = dist;
                 minClass = self._labels[sampleIdx];
@@ -78,29 +82,6 @@ class EigenFaces():
         Return the eigenvalues vector
         """
         return self.pca.get_eigenvalues();
-
-# file in csv format that contains the path to the images and the labels
-# DATABASE: AT&T Facedatabase
-FILE_NAME = "test_original.txt"
-
-def read_csv(): 
-    """
-    Read the file, format
-    """  
-    print "Read CSV file ..." 
-    # open file
-    f = open(FILE_NAME,'r')
-    # inicialize structures
-    list_filenames=[]
-    list_labels = []
-    #read file
-    for line in f.readlines():
-        words = line.split(";")
-        list_labels.append(int(words[1]))
-        list_filenames.append(words[0])   
-    print "OK!" 
-    # return filenames and labels
-    return [list_filenames, list_labels]
 
 def readImages(list_filenames):
     """
@@ -123,32 +104,59 @@ def readImages(list_filenames):
     print "OK! " 
     return images
 
-from modshogun import CSVFile
+# contains images (path) and labels
+# DATABASE: AT&T Facedatabase
+def get_imlist(path, NUM_PERSONS, NUM_IMAGES_PER_PERSON):
+
+    """ Returns a list of filenames for NUM_PERSONS and NUM_IMAGES_PER_PERSON """
+    list_filenames=[]
+    list_labels=[]
+    num_person = 0
+    #list all the directories
+    for directory in os.listdir(path): 
+        relative_path =path+'/'+directory
+
+        if NUM_PERSONS==num_person:
+            break;
+        #is directory?
+        if os.path.isdir(relative_path):
+            num_image = 0;
+            for f in os.listdir(relative_path):
+                os.path.join(relative_path,f)
+                # is an image?                
+                if f.endswith('.pgm'):
+                    num_image = num_image +1
+                    list_labels.append(num_person)
+                    list_filenames.append(relative_path+'/'+f)  
+                    if num_image==NUM_IMAGES_PER_PERSON:
+                        break
+        num_person = num_person+1
+    return [list_filenames, list_labels]
 
 if __name__ == '__main__':
-    # read csv
-    [list_filenames, list_labels] = read_csv()
+    # return list of filenames and labels
+    [list_filenames, list_labels] = get_imlist('../../att_faces', 40, 10)
 
     #read all images
     images = readImages(list_filenames);
 
     #  this class resolves the eigenfaces
     eigenfaces = EigenFaces(100)
-    ###############    ###############    ###############
+    #############################################
     # train eigenfaces
-    ###############    ###############    ###############
+    #############################################
     eigenfaces.train(images, list_labels)
 
-    ###############    ###############    ###############
+    #############################################
     # test eigenfaces
-    ###############    ###############    ###############
+    #############################################
     image = cv2.resize(cv2.imread(list_filenames[-1], cv2.IMREAD_GRAYSCALE), (IMAGE_HEIGHT, IMAGE_WIDHT));
     print "predicted: ", eigenfaces.predict(image), " // real: " ,list_labels[-1] 
 
 
-    ###############    ###############    ###############
+    #############################################
     #   Mean face
-    ###############    ###############    ###############
+    #############################################
     # get mean and reshape ( height and width original size)
     mean = eigenfaces.getMean().reshape(IMAGE_HEIGHT, IMAGE_WIDHT);
     # create mean normalize image (0, 255, type = uint8)   
@@ -160,9 +168,9 @@ if __name__ == '__main__':
     cv2.waitKey(0)
 
 
-###############    ###############    ###############
+    #############################################
     #   Reconstruction with diferents values of eigenvectos
-    ###############    ###############    ###############
+    #############################################
     # Read the last image of the file to test Eigenfaces
     image = cv2.resize(cv2.imread(list_filenames[0], cv2.IMREAD_GRAYSCALE), (IMAGE_HEIGHT, IMAGE_WIDHT));
     # image as row
@@ -170,6 +178,8 @@ if __name__ == '__main__':
 
     # Reconstruct 10 eigen vectors to 300, step 15
     for i in range(10, 300, 50):
+
+        print "Reconstruct with " + str(i) + " eigenvectors" 
 
         pca = PCA()
         # set dimension
