@@ -1,6 +1,13 @@
 #!/usr/bin/env python
-
-# This example is about learning and using eigenfaces in Shogun. 
+#
+# This program is free software you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation either version 3 of the License, or
+# (at your option) any later version.
+#
+# Written (W) 2014 Alejandro Hernandez
+#
+#This example is about learning and using eigenfaces in Shogun. 
 #We demonstrate how to use them for a set of faces.
 
 #OpenCV must be installed
@@ -15,7 +22,6 @@ import numpy as np
 from modshogun import RealFeatures
 from modshogun import PCA
 from modshogun import EuclideanDistance
-
 import math
 import os
 
@@ -64,8 +70,10 @@ class EigenFaces():
         #project inthe subspace
         p = self.pca.apply_to_feature_vector(RealFeatures(imageAsRow).get_feature_vector(0));
 
-        minDist =1e100; # min value to find the face
-        minClass = -1;  #class      
+        #min value to find the face
+        minDist =1e100;
+        #class
+        minClass = -1;
         #search which face is the best match
         for sampleIdx in range(len(self._projections)):
             test = RealFeatures(np.asmatrix(p,np.float64).T)
@@ -132,7 +140,8 @@ def get_imlist(path, NUM_PERSONS, NUM_IMAGES_PER_PERSON):
 
 if __name__ == '__main__':
     #return list of filenames and labels
-    [list_filenames, list_labels] = get_imlist(os.pardir + os.sep + os.pardir+
+    [list_filenames, list_labels] = get_imlist(os.pardir + os.sep + 
+                                         os.pardir + os.sep + os.pardir+
                                          os.sep + os.pardir + os.sep +'data' +
                                          os.sep +'att_dataset' + os.sep +
                                          'training', 25, 10)
@@ -140,7 +149,7 @@ if __name__ == '__main__':
     #read all images
     images = readImages(list_filenames);
 
-    #this class resolves the eigenfacestra
+    #this class resolves the eigenfaces
     eigenfaces = EigenFaces(100)
 
     #train eigenfaces
@@ -152,11 +161,11 @@ if __name__ == '__main__':
     print "predicted: ", eigenfaces.predict(image), " // real: " ,list_labels[-1]
 
     #Mean face
-    # get mean and reshape ( height and width original size)
+    #get mean and reshape ( height and width original size)
     mean = eigenfaces.getMean().reshape(IMAGE_HEIGHT, IMAGE_WIDHT);
-    # create mean normalize image (0, 255, type = uint8)   
+    #create mean normalize image (0, 255, type = uint8)   
     mean_normalize = np.zeros((IMAGE_HEIGHT, IMAGE_WIDHT,1), np.uint8)
-    # normalize
+    #normalize
     mean_normalize= cv2.normalize(mean, mean_normalize, 0, 255,
                                  cv2.NORM_MINMAX, cv2.CV_8UC1);
     #show
@@ -169,7 +178,7 @@ if __name__ == '__main__':
     #Read the last image of the file to test Eigenfaces
     image = cv2.resize(cv2.imread(list_filenames[0], cv2.IMREAD_GRAYSCALE),
                                  (IMAGE_HEIGHT, IMAGE_WIDHT));
-    #image as row 
+    #image as row
     imageAsRow = np.asarray(image.reshape(image.shape[0]*image.shape[1],1),
                             np.float64);
 
